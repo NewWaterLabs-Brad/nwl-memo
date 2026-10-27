@@ -45,12 +45,17 @@ async function derive(pass){
   var base=await crypto.subtle.importKey("raw",new TextEncoder().encode(pass),"PBKDF2",false,["deriveBits"]);
   return crypto.subtle.deriveBits({name:"PBKDF2",hash:"SHA-256",salt:hex(SALT),iterations:ITER},base,256);
 }
-async function open(raw){
+async function open(raw,typed){
   var key=await crypto.subtle.importKey("raw",raw,"AES-GCM",false,["decrypt"]);
   var data=b64(el.textContent.trim());
   var plain=await crypto.subtle.decrypt({name:"AES-GCM",iv:data.slice(0,12)},key,data.slice(12));
-  try{sessionStorage.setItem(KEYNAME,SALT+":"+toB64(raw));}catch(e){}
+  var stored=false;
+  try{sessionStorage.setItem(KEYNAME,SALT+":"+toB64(raw));stored=sessionStorage.getItem(KEYNAME)!==null;}catch(e){}
   if(el.dataset.kind==="pdf"){show(plain);return;}
+  // A document written while Chrome still handles the click on Open keeps stale
+  // mouse state, and its range sliders then do not drag. Reload instead, so the
+  // remembered key opens the page with no click in progress.
+  if(typed&&stored){location.reload();return;}
   var text=new TextDecoder().decode(plain);
   document.open();document.write(text);document.close();
 }
@@ -86,7 +91,7 @@ document.getElementById("f").addEventListener("submit",async function(ev){
   var key;
   try{key=await derive(document.getElementById("p").value.trim());}
   catch(e){m.textContent="This browser could not process the passphrase.";b.disabled=false;return;}
-  try{await open(key);}
+  try{await open(key,true);}
   catch(e){m.textContent="That passphrase does not open this document.";b.disabled=false;}
 });
 })();
