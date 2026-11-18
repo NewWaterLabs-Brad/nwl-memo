@@ -110,13 +110,16 @@ if(!(cached&&cached.split(":")[0]===SALT)&&location.hash.indexOf("#nwl=")===0){
 // the reader comes back through "#nwl=" above.
 var sso=document.querySelector("a.sso");
 if(sso){
+  var popup=null;
   sso.addEventListener("click",function(ev){
-    var w=window.open(sso.href,"nwl-sso","popup,width=480,height=640");
-    if(w)ev.preventDefault();
+    popup=window.open(sso.href,"nwl-sso","popup,width=480,height=640");
+    if(popup)ev.preventDefault();
   });
   window.addEventListener("message",function(ev){
     if(!/^https:\/\/n-[a-z0-9-]+-script\.googleusercontent\.com$/.test(ev.origin))return;
     if(!ev.data||typeof ev.data.nwl!=="string")return;
+    // Google's sandbox stops the popup closing itself; the page that opened it can.
+    try{if(popup)popup.close();}catch(e){}
     document.getElementById("p").value=ev.data.nwl;
     document.getElementById("f").requestSubmit();
   });
