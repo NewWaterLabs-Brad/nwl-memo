@@ -115,7 +115,7 @@ if(sso){
     if(w)ev.preventDefault();
   });
   window.addEventListener("message",function(ev){
-    if(!/^https:\/\/[a-z0-9-]+\.script\.googleusercontent\.com$/.test(ev.origin))return;
+    if(!/^https:\/\/n-[a-z0-9-]+-script\.googleusercontent\.com$/.test(ev.origin))return;
     if(!ev.data||typeof ev.data.nwl!=="string")return;
     document.getElementById("p").value=ev.data.nwl;
     document.getElementById("f").requestSubmit();
